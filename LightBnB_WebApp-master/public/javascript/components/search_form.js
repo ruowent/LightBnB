@@ -2,6 +2,12 @@ $(() => {
 
   const $searchPropertyForm = $(`
   <form action="/properties" method="get" id="search-property-form" class="search-property-form">
+
+      <div class="search-property-form__field-wrapper">
+        <label for="search-property-owner_id">Owner ID</label>
+        <input type="text" name="owner_id" placeholder="Owner ID" id="search-property-owner_id">
+      </div>
+
       <div class="search-property-form__field-wrapper">
         <label for="search-property-form__city">City</label>
         <input type="text" name="city" placeholder="City" id="search-property-form__city">

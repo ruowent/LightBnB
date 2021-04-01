@@ -106,14 +106,65 @@ exports.getAllReservations = getAllReservations;
  * @return {Promise<[{}]>}  A promise to the properties.
  */
  const getAllProperties = function(options, limit = 10) {
-  return pool.query(`
-  SELECT properties.*, avg(rating) AS average_rating
-  FROM properties
-  JOIN property_reviews ON properties.id = property_id
-  GROUP BY properties.id
-  LIMIT $1
-  `, [limit])
-  .then(res => res.rows);
+   const queryParams = [];
+
+   let queryString = `
+   SELECT properties.*, avg(property_reviews.rating) as average_rating
+   FROM properties
+   JOIN property_reviews ON properties.id = property_id
+   `;
+
+   let whereFlag = false;
+
+   if (options.owner_id) {
+    queryParams.push(`${options.owner_id}`);
+    queryString += `WHERE owner_id = $${queryParams.length} `;
+    whereFlag = true;
+   }
+
+   if (options.city) {
+     queryParams.push(`%${options.city}%`);
+
+     if (whereFlag) {
+      queryString += 'AND '
+     } else {
+      queryString += `WHERE `;
+     }
+
+     queryString += `city LIKE $${queryParams.length} `;
+     whereFlag = true;
+   }
+
+   if (options.minimum_price_per_night && options.maximum_price_per_night) {
+    if (whereFlag) {
+      queryString += 'AND '
+     } else {
+      queryString += `WHERE `;
+     }
+
+    queryParams.push(`${options.minimum_price_per_night}`);
+    queryString += `cost_per_night > $${queryParams.length} `;
+    queryParams.push(`${options.maximum_price_per_night}`);
+    queryString += `AND cost_per_night < $${queryParams.length} `;
+    whereFlag = true;
+   }
+   
+   queryString += `GROUP BY properties.id
+   `;
+   
+   if (options.minimum_rating) {
+     queryParams.push(`${options.minimum_rating}`);
+     queryString += `HAVING avg(property_reviews.rating) > $${queryParams.length}`;
+   }
+
+   queryParams.push(limit);
+   queryString += `
+   ORDER BY cost_per_night
+   LIMIT $${queryParams.length};
+   `;
+
+   return pool.query(queryString, queryParams)
+   .then(res => res.rows);
 }
 exports.getAllProperties = getAllProperties;
 
