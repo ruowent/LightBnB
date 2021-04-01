@@ -43,6 +43,7 @@ module.exports = function(router, database) {
           return;
         }
         req.session.userId = user.id;
+        console.log('output user....', user);
         res.send({user: {name: user.name, email: user.email, id: user.id}});
       })
       .catch(e => res.send(e));
