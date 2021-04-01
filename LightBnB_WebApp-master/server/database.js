@@ -79,7 +79,7 @@ exports.addUser = addUser;
  */
 const getAllReservations = function(guest_id, limit = 10) {
   // return getAllProperties(null, 2);
-  pool.query(`
+  return pool.query(`
     SELECT reservations.*, properties.*, avg(rating) AS average_rating
     FROM reservations
     JOIN properties ON properties.id = property_id
@@ -91,7 +91,7 @@ const getAllReservations = function(guest_id, limit = 10) {
     LIMIT $2;  
   `, [guest_id, limit])
   .then(res => {
-console.log('hi');
+    return res.rows;
   })
   .catch(err => console.log(err));
 }
@@ -107,7 +107,10 @@ exports.getAllReservations = getAllReservations;
  */
  const getAllProperties = function(options, limit = 10) {
   return pool.query(`
-  SELECT * FROM properties
+  SELECT properties.*, avg(rating) AS average_rating
+  FROM properties
+  JOIN property_reviews ON properties.id = property_id
+  GROUP BY properties.id
   LIMIT $1
   `, [limit])
   .then(res => res.rows);
